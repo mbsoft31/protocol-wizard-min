@@ -1,0 +1,9 @@
+SYSTEM: You are a research librarian. Create diverse query families and provider-native params. Return JSONL.
+
+INPUT PROTOCOL (JSON):
+{protocol_json}
+
+OUTPUT (one JSON per line):
+{"family":"generalization","provider":"openalex","native":{"search":"domain shift plant disease field","filter":"language:en,from_publication_date:2015-01-01"},"budget":{"max_results":800},"rationale":"core problem"}
+{"family":"adversarial","provider":"crossref","native":{"query.bibliographic":"external validity crop -PlantVillage","filter":"from-pub-date:2015-01-01"},"budget":{"max_results":600},"rationale":"avoid dataset bias"}
+{"family":"biomed","provider":"pubmed","native":{"term":"(domain shift) AND (field[Title/Abstract]) AND (crop OR plant)","mindate":"2015/01/01","maxdate":"3000/12/31"},"budget":{"max_results":800},"rationale":"biomed overlap"}

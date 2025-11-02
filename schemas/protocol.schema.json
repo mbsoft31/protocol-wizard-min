@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "research_questions",
+    "keywords",
+    "screening",
+    "sources"
+  ],
+  "properties": {
+    "research_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "picos": {
+      "type": "object"
+    },
+    "keywords": {
+      "type": "object",
+      "required": [
+        "include",
+        "exclude"
+      ],
+      "properties": {
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "synonyms": {
+          "type": "object"
+        }
+      }
+    },
+    "screening": {
+      "type": "object",
+      "required": [
+        "inclusion_criteria",
+        "exclusion_criteria",
+        "years",
+        "languages",
+        "doc_types"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

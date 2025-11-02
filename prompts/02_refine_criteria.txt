@@ -1,0 +1,17 @@
+SYSTEM: You are revising SLR screening rules for clarity and testability. Return JSON only.
+
+INPUT PROTOCOL (JSON):
+{protocol_json}
+
+TASKS:
+1) Tighten inclusion/exclusion into atomic, testable bullets (avoid subjective words).
+2) Add 5 borderline examples (short sentences) with suggested decisions.
+3) Flag any scope risks or ambiguities.
+
+OUTPUT SCHEMA:
+{
+  "inclusion_criteria_refined": ["..."],
+  "exclusion_criteria_refined": ["..."],
+  "borderline_examples": [{"text":"...", "suggested":"INCLUDE|EXCLUDE|MAYBE", "why":"..."}],
+  "risks_and_ambiguities": ["..."]
+}
