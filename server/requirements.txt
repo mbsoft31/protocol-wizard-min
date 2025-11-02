@@ -1,0 +1,9 @@
+fastapi>=0.111
+uvicorn[standard]>=0.30
+pydantic>=2.7
+jsonschema>=4.23
+pytest>=8.3
+
+# Optional LLM providers (install only if you have keys)
+# openai>=1.47
+# google-generativeai>=0.7

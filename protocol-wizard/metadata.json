@@ -1,0 +1,5 @@
+{
+  "name": "Protocol Wizard",
+  "description": "An in-browser tool to generate, refine, and finalize systematic literature review (SLR) protocols using Google's Gemini AI, with a deterministic fallback for offline use.",
+  "requestFramePermissions": []
+}
