@@ -104,14 +104,14 @@ cp .env.example .env
 ### Development
 
 ```bash
-uvicorn server.main:app --reload --port 8000
+uvicorn protocol_api.main:app --reload --port 8000
 ```
 
 ### Production
 
 ```bash
 # With Gunicorn for production
-gunicorn server.main:app \
+gunicorn protocol_api.main:app \
   --workers 4 \
   --worker-class uvicorn.workers.UvicornWorker \
   --bind 0.0.0.0:8000 \
@@ -133,7 +133,7 @@ RUN pip install google-generativeai openai
 COPY . .
 
 EXPOSE 8000
-CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "protocol_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 ## 📊 Example Usage

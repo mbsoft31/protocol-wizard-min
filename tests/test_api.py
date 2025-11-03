@@ -2,7 +2,7 @@ from __future__ import annotations
 import os
 from fastapi.testclient import TestClient
 
-from server.main import app
+from protocol_api.main import app
 
 
 client = TestClient(app)
@@ -51,4 +51,3 @@ def test_draft_refine_queries_freeze_fallback_flow():
     h2 = f2["manifest"]["protocol_sha256"]
     assert h1 == h2
     assert isinstance(h1, str) and len(h1) == 64
-

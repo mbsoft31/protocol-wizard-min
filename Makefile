@@ -11,7 +11,7 @@ freeze:
 	python protocol_wizard.py freeze --protocol-json outputs/protocol_draft.json --refinements-json outputs/refinements.json --outdir frozen
 
 api:
-	uvicorn server.main:app --reload --port 8000
+	uvicorn protocol_api.main:app --reload --port 8000
 
 test:
 	pytest -q

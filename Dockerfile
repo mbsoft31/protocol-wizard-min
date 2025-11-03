@@ -18,12 +18,12 @@ RUN python -m pip install --upgrade pip && \
     python -m pip install -r requirements.txt
 
 # Copy app code
-COPY server/ ./server/
+COPY protocol_api/ ./protocol_api/
 COPY prompts/ ./prompts/
 COPY schemas/ ./schemas/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "protocol_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 

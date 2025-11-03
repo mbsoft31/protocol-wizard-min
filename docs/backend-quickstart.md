@@ -42,7 +42,7 @@ cp .env.example .env
 # Edit .env with your API keys
 
 # 3. Start server
-uvicorn server.main:app --reload --port 8000
+uvicorn protocol_api.main:app --reload --port 8000
 
 # 4. Test it
 curl http://localhost:8000/health/detailed
@@ -240,7 +240,7 @@ ALLOWED_ORIGINS=http://localhost:3000
 # Restart API
 docker-compose restart api
 # or
-uvicorn server.main:app --reload
+uvicorn protocol_api.main:app --reload
 ```
 
 ---
@@ -276,7 +276,7 @@ ps aux | grep uvicorn  # Local
 lsof -i :8000
 
 # Try different port
-uvicorn server.main:app --port 8001
+uvicorn protocol_api.main:app --port 8001
 ```
 
 ---

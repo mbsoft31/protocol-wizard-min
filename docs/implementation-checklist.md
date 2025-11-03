@@ -200,10 +200,10 @@ pytest -v
 pytest --cov=server --cov-report=html
 
 # Type checking
-mypy server/ --ignore-missing-imports
+mypy protocol_api/ --ignore-missing-imports
 
 # Security scan
-bandit -r server/
+bandit -r protocol_api/
 safety check
 ```
 
@@ -248,7 +248,7 @@ cp .env.example .env
 # Edit .env with your API keys
 
 # 2. Start development server
-uvicorn server.main:app --reload --port 8000
+uvicorn protocol_api.main:app --reload --port 8000
 
 # 3. Verify
 curl http://localhost:8000/health/detailed
@@ -278,7 +278,7 @@ ALLOWED_ORIGINS=https://your-domain.com
 LOG_FORMAT=json
 
 # 2. Use production WSGI server
-gunicorn server.main:app \
+gunicorn protocol_api.main:app \
   --workers 4 \
   --worker-class uvicorn.workers.UvicornWorker \
   --bind 0.0.0.0:8000
@@ -378,10 +378,10 @@ curl http://localhost:8000/metrics
 pytest -v
 
 # 5. Type checking
-mypy server/
+mypy protocol_api/
 
 # 6. Security scan
-bandit -r server/
+bandit -r protocol_api/
 
 # 7. Generate TypeScript types
 ./scripts/generate-types.sh

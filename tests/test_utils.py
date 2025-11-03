@@ -1,6 +1,6 @@
 from __future__ import annotations
 import json
-from server.utils import normalize_jsonl, canonical_json_string
+from protocol_api.utils import normalize_jsonl, canonical_json_string
 
 
 def test_normalize_jsonl_handles_array_and_lines():
@@ -26,4 +26,3 @@ def test_canonical_json_string_stable_ordering():
     sa = canonical_json_string(a)
     sb = canonical_json_string(b)
     assert sa == sb
-

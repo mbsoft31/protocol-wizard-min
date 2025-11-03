@@ -5,8 +5,8 @@ import json
 import pytest
 from unittest.mock import AsyncMock, patch
 from httpx import AsyncClient, ASGITransport
-from server.llm import call_llm_async, LLMConfig, LLMResponse
-from server.utils import deep_sort, canonical_json_string
+from protocol_api.llm import call_llm_async, LLMConfig, LLMResponse
+from protocol_api.utils import deep_sort, canonical_json_string
 
 
 @pytest.mark.asyncio
@@ -29,10 +29,10 @@ async def test_malformed_json_triggers_fallback():
             latency_ms=100,
         )
         
-        with patch('server.llm.call_llm_async', return_value=mock_response):
+        with patch('protocol_api.llm.call_llm_async', return_value=mock_response):
             # Import after patching to use mocked version
-            from server.main import api_draft
-            from server.models import DraftRequest
+            from protocol_api.main import api_draft
+            from protocol_api.models import DraftRequest
             
             response = await api_draft(DraftRequest(subject_text="test subject"))
             
@@ -51,9 +51,9 @@ async def test_empty_llm_response_triggers_fallback():
     ]
     
     for mock_response in configs:
-        with patch('server.llm.call_llm_async', return_value=mock_response):
-            from server.main import api_draft
-            from server.models import DraftRequest
+        with patch('protocol_api.llm.call_llm_async', return_value=mock_response):
+            from protocol_api.main import api_draft
+            from protocol_api.models import DraftRequest
             
             response = await api_draft(DraftRequest(subject_text="test subject"))
             assert response.from_fallback is True
@@ -71,9 +71,9 @@ async def test_llm_timeout_uses_fallback():
         error="Timeout after 60s",
     )
     
-    with patch('server.llm.call_llm_async', return_value=mock_response):
-        from server.main import api_draft
-        from server.models import DraftRequest
+    with patch('protocol_api.llm.call_llm_async', return_value=mock_response):
+        from protocol_api.main import api_draft
+        from protocol_api.models import DraftRequest
         
         response = await api_draft(DraftRequest(subject_text="test subject"))
         assert response.from_fallback is True
@@ -93,9 +93,9 @@ async def test_retry_exhaustion_uses_fallback():
             error="All retries exhausted",
         )
     
-    with patch('server.llm.call_llm_async', side_effect=mock_call):
-        from server.main import api_refine
-        from server.models import RefineRequest, Protocol, Keywords, Screening
+    with patch('protocol_api.llm.call_llm_async', side_effect=mock_call):
+        from protocol_api.main import api_refine
+        from protocol_api.models import RefineRequest, Protocol, Keywords, Screening
         
         protocol = Protocol(
             research_questions=["test"],
@@ -195,7 +195,7 @@ def test_canonical_json_string_stability():
 
 def test_sha256_stability():
     """Test that SHA-256 hashing is stable across runs"""
-    from server.utils import sha256_text
+    from protocol_api.utils import sha256_text
     
     test_string = '{"a":1,"b":{"c":2,"d":3}}'
     
@@ -212,7 +212,7 @@ def test_sha256_stability():
 @pytest.mark.asyncio
 async def test_protocol_freeze_hash_reproducibility():
     """Test that freezing same protocol produces same hash"""
-    from server.main import app
+    from protocol_api.main import app
     
     protocol_data = {
         "research_questions": ["How does X affect Y?"],
@@ -245,7 +245,7 @@ async def test_protocol_freeze_hash_reproducibility():
 
 def test_schema_validation_catches_invalid_years():
     """Test that schema validation catches invalid year ranges"""
-    from server.models import Screening
+    from protocol_api.models import Screening
     from pydantic import ValidationError
     
     # Start year > end year should fail
@@ -263,7 +263,7 @@ def test_schema_validation_catches_invalid_years():
 
 def test_schema_validation_year_bounds():
     """Test year bounds validation"""
-    from server.models import Screening
+    from protocol_api.models import Screening
     from pydantic import ValidationError
     
     # Year too early
@@ -290,7 +290,7 @@ def test_schema_validation_year_bounds():
 @pytest.mark.asyncio
 async def test_schema_endpoint_matches_file():
     """Test that /schema endpoint returns same schema as file"""
-    from server.main import app
+    from protocol_api.main import app
     from pathlib import Path
     import json
     

@@ -3,7 +3,7 @@ Async tests for Protocol Wizard API endpoints
 """
 import pytest
 from httpx import AsyncClient, ASGITransport
-from server.main import app
+from protocol_api.main import app
 
 
 @pytest.mark.asyncio

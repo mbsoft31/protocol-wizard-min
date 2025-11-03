@@ -51,7 +51,7 @@ This document captures two parts:
 ## Part 2 — How To Execute, Measure, and Evaluate
 
 ### Setup
-- Start API: `uvicorn server.main:app --reload --port 8000`
+- Start API: `uvicorn protocol_api.main:app --reload --port 8000`
 - Read workflow: `docs/next-pipeline.md`, `docs/backend.md`
 - Create a run folder per theme: `eval_runs/<theme>/<date>/`
 
@@ -133,4 +133,3 @@ eval_runs/
 
 ### Scoring Summary (per theme)
 - Report: recall on seeds, precision@k, κ, dedup rate, extraction success, hash stability, total human hours, and brief notes on query/provider overlaps.
-

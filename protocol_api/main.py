@@ -397,4 +397,4 @@ async def api_freeze(req: FreezeRequest) -> FreezeResponse:
 ## (startup/shutdown moved into lifespan handler above)
 
 
-# Entrypoint helper: uvicorn server.main:app --reload --port 8000
+# Entrypoint helper: uvicorn protocol_api.main:app --reload --port 8000
