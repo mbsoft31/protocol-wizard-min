@@ -95,20 +95,15 @@ This document captures two parts:
   ```
 - Refine:
   ```bash
-  jq -n --argfile p protocol_draft.json '{protocol:$p}' | \
-  curl -sX POST localhost:8000/refine -H "Content-Type: application/json" --data-binary @- | \
-  jq .refinements > refinements.json
+  jq -c '{protocol: .protocol}' protocol_draft.json | curl.exe -sX POST http://localhost:8000/refine -H "Content-Type: application/json" --data-binary '@-' | jq .refinements > refinements.json
   ```
 - Queries:
   ```bash
-  jq -n --argfile p protocol_draft.json '{protocol:$p}' | \
-  curl -sX POST localhost:8000/queries -H "Content-Type: application/json" --data-binary @- | \
-  jq -r '.queries[]|@json' > queries_draft.jsonl
+  jq -c '{protocol: .protocol}' protocol_draft.json |  curl.exe -sX POST http://localhost:8000/queries -H "Content-Type: application/json" --data-binary '@-' | jq -r '.queries[] | @json' > queries_draft.jsonl
   ```
 - Freeze:
   ```bash
-  jq -n --argfile p protocol_draft.json --argfile r refinements.json '{protocol:$p,refinements:$r}' | \
-  curl -sX POST localhost:8000/freeze -H "Content-Type: application/json" --data-binary @- > frozen.json
+  jq -s -c '{protocol: .[0].protocol, refinements: .[1]}' protocol_draft.json refinements.json | curl.exe -sX POST http://localhost:8000/freeze -H "Content-Type: application/json" --data-binary '@-' > frozen.json
   ```
 
 ### Evaluation Folder Structure

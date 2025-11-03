@@ -21,4 +21,5 @@ _tmp_check.py
 protocol_draft.json
 queries_draft.jsonl
 refinements.json
+frozen.json
 

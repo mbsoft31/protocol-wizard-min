@@ -41,7 +41,7 @@ class LLMConfig:
 
 async def call_llm_async(
     prompt: str,
-    model: str = "gemini:gemini-1.5-flash",
+    model: str = "gemini:gemini-2.5-flash",
     config: Optional[LLMConfig] = None,
 ) -> LLMResponse:
     """
