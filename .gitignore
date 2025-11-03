@@ -17,3 +17,8 @@ outputs/
 frozen/
 _tmp_check.py
 *.log
+
+protocol_draft.json
+queries_draft.jsonl
+refinements.json
+
