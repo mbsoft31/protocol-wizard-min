@@ -1,8 +1,26 @@
 
 import { Query } from '../types';
 
+// Deep sort object keys recursively to match backend canonicalization
+function deepSort(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(deepSort);
+  }
+  const sorted: any = {};
+  Object.keys(obj)
+    .sort()
+    .forEach((key) => {
+      sorted[key] = deepSort(obj[key]);
+    });
+  return sorted;
+}
+
 export function canonicalJSONStringify(obj: any): string {
-  return JSON.stringify(obj, Object.keys(obj).sort(), 0).replace(/\s/g, "");
+  const sorted = deepSort(obj);
+  return JSON.stringify(sorted, null, 0);
 }
 
 export function prettyJSONStringify(obj: any): string {
