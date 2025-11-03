@@ -61,7 +61,8 @@ def normalize_jsonl(raw: str) -> List[Dict[str, Any]]:
 
 
 def utc_now_iso() -> str:
-    return datetime.datetime.utcnow().isoformat() + "Z"
+    # Use timezone-aware UTC; normalize trailing offset to Z
+    return datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 # Simple in-process cache for schema and validator

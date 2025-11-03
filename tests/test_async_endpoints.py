@@ -2,14 +2,15 @@
 Async tests for Protocol Wizard API endpoints
 """
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from server.main import app
 
 
 @pytest.mark.asyncio
 async def test_health_endpoint():
     """Test basic health endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/health")
         assert response.status_code == 200
         data = response.json()
@@ -19,7 +20,8 @@ async def test_health_endpoint():
 @pytest.mark.asyncio
 async def test_health_detailed_endpoint():
     """Test detailed health endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/health/detailed")
         assert response.status_code == 200
         data = response.json()
@@ -31,7 +33,8 @@ async def test_health_detailed_endpoint():
 @pytest.mark.asyncio
 async def test_schema_endpoint():
     """Test schema retrieval"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/schema")
         assert response.status_code == 200
         schema = response.json()
@@ -41,7 +44,8 @@ async def test_schema_endpoint():
 @pytest.mark.asyncio
 async def test_draft_endpoint_with_fallback():
     """Test draft endpoint (will use fallback without API keys)"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/draft",
             json={
@@ -71,7 +75,8 @@ async def test_draft_endpoint_with_fallback():
 @pytest.mark.asyncio
 async def test_draft_endpoint_validation():
     """Test draft endpoint input validation"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Too short subject text
         response = await client.post(
             "/draft",
@@ -83,7 +88,8 @@ async def test_draft_endpoint_validation():
 @pytest.mark.asyncio
 async def test_refine_endpoint():
     """Test refine endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         # First get a draft protocol
         draft_response = await client.post(
             "/draft",
@@ -114,7 +120,8 @@ async def test_refine_endpoint():
 @pytest.mark.asyncio
 async def test_queries_endpoint():
     """Test queries endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Get a protocol first
         draft_response = await client.post(
             "/draft",
@@ -143,7 +150,8 @@ async def test_queries_endpoint():
 @pytest.mark.asyncio
 async def test_freeze_endpoint():
     """Test freeze endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Get a protocol first
         draft_response = await client.post(
             "/draft",
@@ -177,7 +185,8 @@ async def test_freeze_endpoint():
 @pytest.mark.asyncio
 async def test_freeze_with_refinements():
     """Test freeze endpoint with refinements merged"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Get protocol and refinements
         draft_response = await client.post(
             "/draft",
@@ -216,7 +225,8 @@ async def test_freeze_with_refinements():
 @pytest.mark.asyncio
 async def test_process_time_header():
     """Test that process time header is added to responses"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/health")
         assert "X-Process-Time-Ms" in response.headers
         
@@ -228,7 +238,8 @@ async def test_process_time_header():
 @pytest.mark.asyncio
 async def test_cors_headers():
     """Test CORS headers are present"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.options(
             "/health",
             headers={"Origin": "http://localhost:3000"}
@@ -241,7 +252,8 @@ async def test_cors_headers():
 @pytest.mark.asyncio
 async def test_custom_model_parameter():
     """Test that custom model parameter is accepted"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/draft",
             json={

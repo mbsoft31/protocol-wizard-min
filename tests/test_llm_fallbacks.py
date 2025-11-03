@@ -4,6 +4,7 @@ Test LLM fallback behavior and malformed JSON handling
 import json
 import pytest
 from unittest.mock import AsyncMock, patch
+from httpx import AsyncClient, ASGITransport
 from server.llm import call_llm_async, LLMConfig, LLMResponse
 from server.utils import deep_sort, canonical_json_string
 
@@ -211,7 +212,6 @@ def test_sha256_stability():
 @pytest.mark.asyncio
 async def test_protocol_freeze_hash_reproducibility():
     """Test that freezing same protocol produces same hash"""
-    from httpx import AsyncClient
     from server.main import app
     
     protocol_data = {
@@ -230,7 +230,8 @@ async def test_protocol_freeze_hash_reproducibility():
         "sources": ["arxiv", "pubmed"]
     }
     
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Freeze twice
         response1 = await client.post("/freeze", json={"protocol": protocol_data})
         response2 = await client.post("/freeze", json={"protocol": protocol_data})
@@ -289,12 +290,12 @@ def test_schema_validation_year_bounds():
 @pytest.mark.asyncio
 async def test_schema_endpoint_matches_file():
     """Test that /schema endpoint returns same schema as file"""
-    from httpx import AsyncClient
     from server.main import app
     from pathlib import Path
     import json
     
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/schema")
         api_schema = response.json()
         

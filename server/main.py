@@ -8,6 +8,7 @@ from typing import Any, Dict
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 import time
 
 from .llm import (
@@ -50,10 +51,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI lifespan context replacing deprecated on_event hooks."""
+    logger.info("=" * 60)
+    logger.info("Protocol Wizard API starting up")
+    logger.info(f"Default model: {default_model()}")
+    logger.info(f"OpenAI configured: {'OPENAI_API_KEY' in os.environ}")
+    logger.info(f"Gemini configured: {'GOOGLE_API_KEY' in os.environ}")
+    logger.info(f"Allowed origins: {os.getenv('ALLOWED_ORIGINS', '*')}")
+    logger.info("=" * 60)
+    try:
+        yield
+    finally:
+        logger.info("Protocol Wizard API shutting down")
+
 app = FastAPI(
     title="Protocol Wizard API",
     version="0.2.0",
     description="AI-powered systematic review protocol generation",
+    lifespan=lifespan,
 )
 
 # Configure CORS - restrict in production!
@@ -176,8 +193,8 @@ async def api_draft(req: DraftRequest) -> DraftResponse:
     except FileNotFoundError:
         logger.error("Draft prompt template not found")
         raise HTTPException(status_code=500, detail="Prompt template not found")
-    
-    prompt = prompt_tmpl.format(subject_text=req.subject_text)
+    # Avoid str.format collisions with JSON braces by using simple replacement
+    prompt = prompt_tmpl.replace("{subject_text}", req.subject_text)
     
     # Call LLM with retry logic
     config = get_llm_config()
@@ -248,7 +265,7 @@ async def api_refine(req: RefineRequest) -> RefineResponse:
         raise HTTPException(status_code=500, detail="Prompt template not found")
     
     proto_json = json.dumps(req.protocol.model_dump(), ensure_ascii=False, indent=2)
-    prompt = prompt_tmpl.format(protocol_json=proto_json)
+    prompt = prompt_tmpl.replace("{protocol_json}", proto_json)
     
     # Call LLM
     config = get_llm_config()
@@ -300,7 +317,7 @@ async def api_queries(req: QueriesRequest) -> QueriesResponse:
         raise HTTPException(status_code=500, detail="Prompt template not found")
     
     proto_json = json.dumps(req.protocol.model_dump(), ensure_ascii=False, indent=2)
-    prompt = prompt_tmpl.format(protocol_json=proto_json)
+    prompt = prompt_tmpl.replace("{protocol_json}", proto_json)
     
     # Call LLM
     config = get_llm_config()
@@ -377,24 +394,7 @@ async def api_freeze(req: FreezeRequest) -> FreezeResponse:
     )
 
 
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    """Log startup information"""
-    logger.info("=" * 60)
-    logger.info("Protocol Wizard API starting up")
-    logger.info(f"Default model: {default_model()}")
-    logger.info(f"OpenAI configured: {'OPENAI_API_KEY' in os.environ}")
-    logger.info(f"Gemini configured: {'GOOGLE_API_KEY' in os.environ}")
-    logger.info(f"Allowed origins: {allowed_origins}")
-    logger.info("=" * 60)
-
-
-# Shutdown event
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Log shutdown"""
-    logger.info("Protocol Wizard API shutting down")
+## (startup/shutdown moved into lifespan handler above)
 
 
 # Entrypoint helper: uvicorn server.main:app --reload --port 8000
