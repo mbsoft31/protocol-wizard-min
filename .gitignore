@@ -1,1 +1,19 @@
 .env
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Editors/IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Local outputs and scratch
+outputs/
+frozen/
+_tmp_check.py
+*.log

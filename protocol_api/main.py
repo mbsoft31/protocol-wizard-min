@@ -5,6 +5,16 @@ import os
 from pathlib import Path
 from typing import Any, Dict
 
+# Load environment from .env early (if available)
+try:
+    from dotenv import load_dotenv, find_dotenv
+    _dotenv_path = find_dotenv(usecwd=True)
+    if _dotenv_path:
+        load_dotenv(_dotenv_path, override=False)
+except Exception:
+    # Optional dependency; if missing, env variables must be set externally
+    _dotenv_path = None
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

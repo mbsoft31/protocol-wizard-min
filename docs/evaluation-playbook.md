@@ -91,8 +91,7 @@ This document captures two parts:
 ### Quick Commands
 - Draft:
   ```bash
-  curl -sX POST localhost:8000/draft -H "Content-Type: application/json" \
-    -d '{"subject_text":"..."}' > protocol_draft.json
+  curl -sX POST localhost:8000/draft -H "Content-Type: application/json" -d '{"subject_text":"Using deep learning for plant disease detection, focusing on generalization from lab/greenhouse to field conditions; we care about real-world robustness, domain shift, and reporting the accuracy drop between lab and field evaluations.We also want to include Arabic and French literature, not just English, and consider remote sensing as secondary."}' > protocol_draft.json
   ```
 - Refine:
   ```bash
