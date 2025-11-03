@@ -34,8 +34,8 @@ curl http://localhost:8000/health
 
 ```bash
 # 1. Install dependencies
-pip install -r requirements.txt
-pip install openai google-generativeai  # LLM providers
+pip install -r server/requirements.txt
+pip install openai google-generativeai  # LLM providers (optional)
 
 # 2. Configure environment
 cp .env.example .env
@@ -238,7 +238,7 @@ docker-compose --profile monitoring up -d
 ALLOWED_ORIGINS=http://localhost:3000
 
 # Restart API
-docker-compose restart backend
+docker-compose restart api
 # or
 uvicorn server.main:app --reload
 ```
@@ -283,19 +283,19 @@ uvicorn server.main:app --port 8001
 
 ## 📚 Next Steps
 
-1. **Read API Examples:** Check `API_EXAMPLES.md` for detailed usage
+1. **Read API Examples:** Check `api-examples.md` for detailed usage
 2. **Customize Prompts:** Edit files in `prompts/` directory
 3. **Add Tests:** Run `pytest` to verify everything works
-4. **Deploy:** See `README.md` for production deployment guide
+4. **Deploy:** See `backend.md` for production deployment guide
 
 ---
 
 ## 🎓 Learn More
 
-- **Full API Documentation:** `API_EXAMPLES.md`
-- **Deployment Guide:** `README.md`
-- **Migration Guide:** `MIGRATION_GUIDE.md` (if upgrading)
-- **Architecture:** `IMPROVEMENTS_SUMMARY.md`
+- **Full API Documentation:** `api-examples.md`
+- **Deployment Guide:** `backend.md`
+- **Migration Guide:** `migration-guide.md` (if upgrading)
+- **Architecture:** `improvements-summary.md`
 
 ---
 
@@ -349,7 +349,8 @@ ALLOWED_ORIGINS=https://your-domain.com
 ## 🆘 Need Help?
 
 - **GitHub Issues:** Report bugs or request features
-- **Documentation:** Check `API_EXAMPLES.md` for detailed examples
-- **Logs:** Check `docker-compose logs backend` for errors
+- **Documentation:** Check `api-examples.md` for detailed examples
+- **Logs:** Check `docker-compose logs api` for errors
 
 Happy protocol generation! 🚀
+

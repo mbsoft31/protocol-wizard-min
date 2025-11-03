@@ -12,11 +12,11 @@ All requested features have been implemented. Here's your complete package.
 - **File:** `server/utils.py`
 - **Functions:** `deep_sort()`, `canonical_json_string()`, `sha256_text()`
 - **Tests:** `tests/test_llm_fallbacks.py` - verify reproducibility
-- **Frontend Guide:** See `IMPLEMENTATION_CHECKLIST.md` for TypeScript implementation
+- **Frontend Guide:** See `implementation-checklist.md` for TypeScript implementation
 
 #### CORS Configuration
 - **File:** `.env.example` - includes `ALLOWED_ORIGINS`
-- **Documentation:** `README.md`, `QUICKSTART.md`
+- **Documentation:** `backend.md`, `backend-quickstart.md`
 - **Default:** `http://localhost:3000,http://localhost:5173`
 
 ---
@@ -187,40 +187,40 @@ docker-compose -f docker-compose.prod.yml up -d
 
 #### Comprehensive Guides
 
-1. **README.md** (Enhanced)
+1. **backend.md** (Enhanced)
    - Complete setup instructions
    - Configuration reference
    - Model options
    - Fallback behavior
    - Examples
 
-2. **QUICKSTART.md** (New)
+2. **backend-quickstart.md** (New)
    - 5-minute setup
    - First API call
    - Common configurations
    - Troubleshooting
 
-3. **API_EXAMPLES.md** (New)
+3. **api-examples.md** (New)
    - Complete examples for every endpoint
    - cURL, Python, JavaScript
    - Error handling patterns
    - Complete workflow example
    - Request tracing
 
-4. **MIGRATION_GUIDE.md** (New)
+4. **migration-guide.md** (New)
    - Upgrade from v0.1.0 to v0.2.0
    - Breaking changes (none!)
    - New features
    - Code migration examples
    - Troubleshooting
 
-5. **IMPROVEMENTS_SUMMARY.md** (New)
+5. **improvements-summary.md** (New)
    - Detailed changelog
    - Performance metrics
    - Code quality improvements
    - Before/after comparisons
 
-6. **IMPLEMENTATION_CHECKLIST.md** (New)
+6. **implementation-checklist.md** (New)
    - Complete implementation guide
    - Frontend integration
    - Testing checklist
@@ -262,12 +262,12 @@ protocol-wizard/
 ├── requirements.txt                   # Enhanced ✨
 │
 └── Documentation/
-    ├── README.md                      # Enhanced ✨
-    ├── QUICKSTART.md                  # NEW ✨
-    ├── API_EXAMPLES.md                # NEW ✨
-    ├── MIGRATION_GUIDE.md             # NEW ✨
-    ├── IMPROVEMENTS_SUMMARY.md        # NEW ✨
-    ├── IMPLEMENTATION_CHECKLIST.md    # NEW ✨
+    ├── backend.md                      # Enhanced ✨
+    ├── backend-quickstart.md                  # NEW ✨
+    ├── api-examples.md                # NEW ✨
+    ├── migration-guide.md             # NEW ✨
+    ├── improvements-summary.md        # NEW ✨
+    ├── implementation-checklist.md    # NEW ✨
     └── IMPLEMENTATION_COMPLETE.md     # This file ✨
 ```
 
@@ -324,7 +324,7 @@ echo "OPENAI_API_KEY=your_key" >> .env
 docker-compose up -d
 
 # Or local development
-pip install -r requirements.txt
+pip install -r server/requirements.txt
 uvicorn server.main:app --reload
 ```
 
@@ -448,7 +448,7 @@ docker-compose --profile monitoring up -d
 2. ✅ Run tests: `pytest -v`
 3. ✅ Start server: `docker-compose up -d`
 4. ✅ Make first API call
-5. ✅ Read `API_EXAMPLES.md`
+5. ✅ Read `api-examples.md`
 
 ### Short Term (This Week)
 1. Generate TypeScript types: `./scripts/generate-types.sh`
@@ -471,12 +471,12 @@ docker-compose --profile monitoring up -d
 
 Read these in order for best results:
 
-1. **QUICKSTART.md** - Get running in 5 minutes
-2. **API_EXAMPLES.md** - Learn the API with examples
-3. **README.md** - Complete reference guide
-4. **IMPLEMENTATION_CHECKLIST.md** - Full setup guide
-5. **MIGRATION_GUIDE.md** - If upgrading from v0.1.0
-6. **IMPROVEMENTS_SUMMARY.md** - What changed and why
+1. **backend-quickstart.md** - Get running in 5 minutes
+2. **api-examples.md** - Learn the API with examples
+3. **backend.md** - Complete reference guide
+4. **implementation-checklist.md** - Full setup guide
+5. **migration-guide.md** - If upgrading from v0.1.0
+6. **improvements-summary.md** - What changed and why
 
 ---
 
@@ -554,10 +554,10 @@ You now have a **production-ready API** with:
 ## 💬 Questions?
 
 Check the relevant documentation:
-- Setup issues → `QUICKSTART.md`
-- API usage → `API_EXAMPLES.md`
-- Deployment → `README.md`
-- Frontend → `IMPLEMENTATION_CHECKLIST.md`
+- Setup issues → `backend-quickstart.md`
+- API usage → `api-examples.md`
+- Deployment → `backend.md`
+- Frontend → `implementation-checklist.md`
 - Troubleshooting → All docs have sections
 
 ---

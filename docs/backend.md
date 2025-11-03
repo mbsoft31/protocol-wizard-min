@@ -1,8 +1,7 @@
 # Protocol Wizard API (FastAPI) - Enhanced Version
 
-Note: A docs index is available at `docs/` (see `docs/backend.md`). The
-authoritative backend guide remains here under `server/` for proximity to
-code, and is linked from the root docs.
+Note: This is the backend guide. For an index of all documentation, see
+`docs/README.md` at the repo root.
 
 AI-powered systematic review protocol generation with robust LLM integration, retry logic, and comprehensive observability.
 
@@ -53,7 +52,7 @@ AI-powered systematic review protocol generation with robust LLM integration, re
 ### 1. Install Dependencies
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r server/requirements.txt
 ```
 
 ### 2. Install LLM Providers (Optional)
@@ -267,3 +266,4 @@ Improvements welcome! Focus areas:
 ## 📄 License
 
 [Your License Here]
+
