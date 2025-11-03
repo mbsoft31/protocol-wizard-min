@@ -1,5 +1,9 @@
 # Protocol Wizard API (FastAPI) - Enhanced Version
 
+Note: A docs index is available at `docs/` (see `docs/backend.md`). The
+authoritative backend guide remains here under `server/` for proximity to
+code, and is linked from the root docs.
+
 AI-powered systematic review protocol generation with robust LLM integration, retry logic, and comprehensive observability.
 
 ## 🚀 Key Features

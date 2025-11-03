@@ -1,3 +1,6 @@
+"""
+Protocol Wizard API - Fully integrated with observability and rate limiting
+"""
 from __future__ import annotations
 import json
 import logging
@@ -7,8 +10,7 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import time
+from fastapi.responses import JSONResponse, Response
 
 from .llm import (
     call_llm_async,
@@ -41,22 +43,44 @@ from .utils import (
     validate_against_schema,
 )
 
-# Configure logging (level from env)
-_log_level_name = os.getenv("LOG_LEVEL", "INFO").upper()
-_log_level = getattr(logging, _log_level_name, logging.INFO)
+# Import observability and rate limiting
+try:
+    from .observability import (
+        ObservabilityMiddleware,
+        RequestIDMiddleware,
+        metrics_collector,
+        logger,
+        get_request_id,
+        log_llm_metrics,
+        log_fallback_usage,
+    )
+    from .rate_limiting import (
+        RateLimitMiddleware,
+        RequestSizeLimitMiddleware,
+        validate_subject_text,
+        validate_model_string,
+        validate_protocol_queries,
+        get_rate_limit_config,
+    )
+    OBSERVABILITY_AVAILABLE = True
+except ImportError:
+    OBSERVABILITY_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+
+# Configure logging
 logging.basicConfig(
-    level=_log_level,
+    level=os.getenv("LOG_LEVEL", "INFO"),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger(__name__)
 
+# Create FastAPI app
 app = FastAPI(
     title="Protocol Wizard API",
-    version="0.2.0",
-    description="AI-powered systematic review protocol generation",
+    version="0.3.0",
+    description="AI-powered systematic review protocol generation with full observability",
 )
 
-# Configure CORS - restrict in production!
+# Configure CORS
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
@@ -66,48 +90,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Request logging middleware
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """Log all requests with timing"""
-    start_time = time.time()
+# Add observability middleware
+if OBSERVABILITY_AVAILABLE:
+    # Request ID should be first
+    app.add_middleware(RequestIDMiddleware)
     
-    # Log request
-    logger.info(
-        f"Request: {request.method} {request.url.path} "
-        f"from {request.client.host if request.client else 'unknown'}"
+    # Then observability (logging, metrics, timing)
+    app.add_middleware(ObservabilityMiddleware)
+    
+    # Rate limiting
+    rate_config = get_rate_limit_config()
+    app.add_middleware(
+        RateLimitMiddleware,
+        requests_per_minute=rate_config["requests_per_minute"],
+        burst_size=rate_config["burst_size"]
     )
     
-    # Process request
-    try:
-        response = await call_next(request)
-        process_time = (time.time() - start_time) * 1000
-        
-        # Add timing header
-        response.headers["X-Process-Time-Ms"] = str(int(process_time))
-        
-        logger.info(
-            f"Response: {request.method} {request.url.path} "
-            f"status={response.status_code} time={process_time:.2f}ms"
-        )
-        
-        return response
-    except Exception as e:
-        logger.error(f"Request failed: {request.method} {request.url.path} - {str(e)}")
-        raise
+    # Request size limiting
+    app.add_middleware(
+        RequestSizeLimitMiddleware,
+        max_body_size=rate_config["max_body_size"]
+    )
 
 
 # Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Handle unexpected exceptions gracefully"""
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    request_id = get_request_id(request) if OBSERVABILITY_AVAILABLE else "unknown"
+    logger.error(f"Unhandled exception", extra={
+        "request_id": request_id,
+        "path": request.url.path,
+        "error": str(exc)
+    }, exc_info=True)
+    
     return JSONResponse(
         status_code=500,
         content={
             "detail": "Internal server error",
-            "path": request.url.path,
+            "request_id": request_id,
         },
     )
 
@@ -160,16 +181,32 @@ async def get_schema() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Invalid schema format")
 
 
+# Metrics endpoint (if Prometheus available)
+if OBSERVABILITY_AVAILABLE:
+    @app.get("/metrics")
+    async def metrics():
+        """Prometheus metrics endpoint"""
+        metrics_data, content_type = metrics_collector.export_metrics()
+        return Response(content=metrics_data, media_type=content_type)
+
+
 @app.post("/draft", response_model=DraftResponse)
-async def api_draft(req: DraftRequest) -> DraftResponse:
-    """
-    Generate initial protocol draft from subject text.
+async def api_draft(req: DraftRequest, request: Request) -> DraftResponse:
+    """Generate initial protocol draft from subject text"""
+    request_id = get_request_id(request) if OBSERVABILITY_AVAILABLE else None
     
-    Uses LLM to extract research questions, PICOS, keywords, screening criteria,
-    and data sources. Falls back to deterministic response if LLM fails.
-    """
+    # Validate input
+    if OBSERVABILITY_AVAILABLE:
+        validate_subject_text(req.subject_text)
+        if req.model:
+            validate_model_string(req.model)
+    
     model = req.model or default_model()
-    logger.info(f"Drafting protocol with model={model}")
+    logger.info(f"Drafting protocol", extra={
+        "model": model,
+        "request_id": request_id,
+        "subject_length": len(req.subject_text)
+    })
     
     try:
         prompt_tmpl = load_text(Path("prompts/01_extract_protocol.txt"))
@@ -183,25 +220,35 @@ async def api_draft(req: DraftRequest) -> DraftResponse:
     config = get_llm_config()
     response = await call_llm_async(prompt, model=model, config=config)
     
+    # Log LLM metrics
+    if OBSERVABILITY_AVAILABLE:
+        log_llm_metrics(
+            provider=response.provider,
+            model=response.model,
+            success=response.success,
+            duration_ms=response.latency_ms,
+            tokens=response.tokens_used,
+            error=response.error,
+            request_id=request_id
+        )
+    
     used_fallback = False
     if not response.success or not response.content:
-        logger.warning(
-            f"LLM call failed, using fallback. Error: {response.error}"
-        )
+        logger.warning(f"LLM call failed, using fallback. Error: {response.error}")
+        if OBSERVABILITY_AVAILABLE:
+            log_fallback_usage("/draft", f"LLM failed: {response.error}", request_id)
         used_fallback = True
         raw = FALLBACK_DRAFT
     else:
         raw = response.content
-        logger.info(
-            f"LLM call succeeded: tokens={response.tokens_used}, "
-            f"latency={response.latency_ms}ms"
-        )
     
     # Parse response
     try:
         obj = json.loads(strip_code_fences(raw))
     except json.JSONDecodeError as e:
         logger.warning(f"Failed to parse LLM response, using fallback: {e}")
+        if OBSERVABILITY_AVAILABLE:
+            log_fallback_usage("/draft", f"JSON parse error: {e}", request_id)
         used_fallback = True
         obj = json.loads(FALLBACK_DRAFT)
     
@@ -210,7 +257,6 @@ async def api_draft(req: DraftRequest) -> DraftResponse:
     if not validation["valid"]:
         logger.warning(f"Protocol validation failed: {validation['errors']}")
     
-    # Generate checklist
     checklist = (
         "# HIL Checklist (Protocol Draft)\n\n"
         "- [ ] Do research questions match the topic?\n"
@@ -231,15 +277,15 @@ async def api_draft(req: DraftRequest) -> DraftResponse:
 
 
 @app.post("/refine", response_model=RefineResponse)
-async def api_refine(req: RefineRequest) -> RefineResponse:
-    """
-    Refine inclusion/exclusion criteria with examples and risk assessment.
+async def api_refine(req: RefineRequest, request: Request) -> RefineResponse:
+    """Refine inclusion/exclusion criteria"""
+    request_id = get_request_id(request) if OBSERVABILITY_AVAILABLE else None
     
-    Takes an existing protocol and generates refined criteria, borderline examples,
-    and identifies potential ambiguities.
-    """
+    if req.model and OBSERVABILITY_AVAILABLE:
+        validate_model_string(req.model)
+    
     model = req.model or default_model()
-    logger.info(f"Refining protocol with model={model}")
+    logger.info(f"Refining protocol", extra={"model": model, "request_id": request_id})
     
     try:
         prompt_tmpl = load_text(Path("prompts/02_refine_criteria.txt"))
@@ -250,29 +296,36 @@ async def api_refine(req: RefineRequest) -> RefineResponse:
     proto_json = json.dumps(req.protocol.model_dump(), ensure_ascii=False, indent=2)
     prompt = prompt_tmpl.format(protocol_json=proto_json)
     
-    # Call LLM
     config = get_llm_config()
     response = await call_llm_async(prompt, model=model, config=config)
     
+    if OBSERVABILITY_AVAILABLE:
+        log_llm_metrics(
+            provider=response.provider,
+            model=response.model,
+            success=response.success,
+            duration_ms=response.latency_ms,
+            tokens=response.tokens_used,
+            error=response.error,
+            request_id=request_id
+        )
+    
     used_fallback = False
     if not response.success or not response.content:
-        logger.warning(
-            f"LLM call failed, using fallback. Error: {response.error}"
-        )
+        logger.warning(f"LLM call failed, using fallback. Error: {response.error}")
+        if OBSERVABILITY_AVAILABLE:
+            log_fallback_usage("/refine", f"LLM failed: {response.error}", request_id)
         used_fallback = True
         raw = FALLBACK_REFINEMENTS
     else:
         raw = response.content
-        logger.info(
-            f"LLM call succeeded: tokens={response.tokens_used}, "
-            f"latency={response.latency_ms}ms"
-        )
     
-    # Parse response
     try:
         obj = json.loads(strip_code_fences(raw))
     except json.JSONDecodeError as e:
         logger.warning(f"Failed to parse LLM response, using fallback: {e}")
+        if OBSERVABILITY_AVAILABLE:
+            log_fallback_usage("/refine", f"JSON parse error: {e}", request_id)
         used_fallback = True
         obj = json.loads(FALLBACK_REFINEMENTS)
     
@@ -283,15 +336,19 @@ async def api_refine(req: RefineRequest) -> RefineResponse:
 
 
 @app.post("/queries", response_model=QueriesResponse)
-async def api_queries(req: QueriesRequest) -> QueriesResponse:
-    """
-    Generate database-specific search queries from protocol.
+async def api_queries(req: QueriesRequest, request: Request) -> QueriesResponse:
+    """Generate database-specific search queries"""
+    request_id = get_request_id(request) if OBSERVABILITY_AVAILABLE else None
     
-    Creates optimized queries for different databases (OpenAlex, PubMed, etc.)
-    based on the protocol's keywords and screening criteria.
-    """
+    if req.model and OBSERVABILITY_AVAILABLE:
+        validate_model_string(req.model)
+    
+    # Validate protocol for queries
+    if OBSERVABILITY_AVAILABLE:
+        validate_protocol_queries(req.protocol.model_dump())
+    
     model = req.model or default_model()
-    logger.info(f"Generating queries with model={model}")
+    logger.info(f"Generating queries", extra={"model": model, "request_id": request_id})
     
     try:
         prompt_tmpl = load_text(Path("prompts/03_queries.txt"))
@@ -302,24 +359,28 @@ async def api_queries(req: QueriesRequest) -> QueriesResponse:
     proto_json = json.dumps(req.protocol.model_dump(), ensure_ascii=False, indent=2)
     prompt = prompt_tmpl.format(protocol_json=proto_json)
     
-    # Call LLM
     config = get_llm_config()
     response = await call_llm_async(prompt, model=model, config=config)
     
+    if OBSERVABILITY_AVAILABLE:
+        log_llm_metrics(
+            provider=response.provider,
+            model=response.model,
+            success=response.success,
+            duration_ms=response.latency_ms,
+            tokens=response.tokens_used,
+            error=response.error,
+            request_id=request_id
+        )
+    
     used_fallback = False
     if not response.success or not response.content:
-        logger.warning(
-            f"LLM call failed for queries. Error: {response.error}"
-        )
+        logger.warning(f"LLM call failed for queries. Error: {response.error}")
+        if OBSERVABILITY_AVAILABLE:
+            log_fallback_usage("/queries", f"LLM failed: {response.error}", request_id)
         used_fallback = True
         return QueriesResponse(queries=[], from_fallback=True)
     
-    logger.info(
-        f"LLM call succeeded: tokens={response.tokens_used}, "
-        f"latency={response.latency_ms}ms"
-    )
-    
-    # Parse JSONL response
     objs = normalize_jsonl(response.content)
     
     if not objs:
@@ -330,18 +391,13 @@ async def api_queries(req: QueriesRequest) -> QueriesResponse:
 
 
 @app.post("/freeze", response_model=FreezeResponse)
-async def api_freeze(req: FreezeRequest) -> FreezeResponse:
-    """
-    Freeze protocol with cryptographic hash for reproducibility.
-    
-    Optionally merges refinements into the protocol, generates SHA-256 hash,
-    and creates a manifest for audit trail.
-    """
-    logger.info("Freezing protocol")
+async def api_freeze(req: FreezeRequest, request: Request) -> FreezeResponse:
+    """Freeze protocol with cryptographic hash"""
+    request_id = get_request_id(request) if OBSERVABILITY_AVAILABLE else None
+    logger.info("Freezing protocol", extra={"request_id": request_id})
     
     proto = req.protocol.model_dump()
     
-    # Merge refinements if provided
     if req.refinements is not None:
         logger.info("Merging refinements into protocol")
         ref = req.refinements.model_dump()
@@ -358,11 +414,13 @@ async def api_freeze(req: FreezeRequest) -> FreezeResponse:
         
         proto["screening"] = screening
     
-    # Generate canonical JSON and hash
     payload = canonical_json_string(proto)
     checksum = sha256_text(payload)
     
-    logger.info(f"Protocol frozen with checksum={checksum[:16]}...")
+    logger.info(f"Protocol frozen", extra={
+        "checksum": checksum[:16],
+        "request_id": request_id
+    })
     
     manifest = Manifest(
         frozen_at_utc=utc_now_iso(),
@@ -377,7 +435,6 @@ async def api_freeze(req: FreezeRequest) -> FreezeResponse:
     )
 
 
-# Startup event
 @app.on_event("startup")
 async def startup_event():
     """Log startup information"""
@@ -387,14 +444,16 @@ async def startup_event():
     logger.info(f"OpenAI configured: {'OPENAI_API_KEY' in os.environ}")
     logger.info(f"Gemini configured: {'GOOGLE_API_KEY' in os.environ}")
     logger.info(f"Allowed origins: {allowed_origins}")
+    logger.info(f"Observability: {OBSERVABILITY_AVAILABLE}")
+    if OBSERVABILITY_AVAILABLE:
+        rate_config = get_rate_limit_config()
+        logger.info(f"Rate limiting: {os.getenv('ENABLE_RATE_LIMITING', 'false')}")
+        logger.info(f"  - Requests/min: {rate_config['requests_per_minute']}")
+        logger.info(f"Metrics: {os.getenv('ENABLE_METRICS', 'false')}")
     logger.info("=" * 60)
 
 
-# Shutdown event
 @app.on_event("shutdown")
 async def shutdown_event():
     """Log shutdown"""
     logger.info("Protocol Wizard API shutting down")
-
-
-# Entrypoint helper: uvicorn server.main:app --reload --port 8000

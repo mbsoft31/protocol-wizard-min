@@ -15,5 +15,10 @@ httpx>=0.27  # For async testing
 # google-generativeai>=0.7  # For Google Gemini models
 
 # Optional: Performance monitoring
-# prometheus-client>=0.20  # For metrics
+prometheus-client>=0.20  # For metrics (install if ENABLE_METRICS=true)
 # python-json-logger>=2.0  # For structured logging
+
+# Development tools
+mypy>=1.8  # Type checking
+bandit>=1.7  # Security scanning
+safety>=3.0  # Dependency vulnerability checking

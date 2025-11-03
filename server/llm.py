@@ -204,7 +204,7 @@ async def _call_gemini(
         )
         
         # Run in thread pool since Gemini SDK is synchronous
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         response = await loop.run_in_executor(
             None, model_instance.generate_content, prompt
         )
@@ -311,7 +311,7 @@ async def check_llm_health() -> dict[str, bool]:
     if os.getenv("OPENAI_API_KEY"):
         try:
             response = await call_llm_async(
-                "test", "openai:gpt-3.5-turbo", LLMConfig(max_retries=1)
+                "test", "openai:gpt-4o-mini", LLMConfig(max_retries=1)
             )
             health["openai"] = response.success
         except Exception:
@@ -330,7 +330,7 @@ async def check_llm_health() -> dict[str, bool]:
     return health
 
 
-# Fallback responses
+# Fallback responses (used when LLM calls fail)
 FALLBACK_DRAFT = json.dumps({
     "research_questions": [
         "How do deep models generalize from lab to field for plant disease detection?"

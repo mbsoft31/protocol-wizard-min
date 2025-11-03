@@ -1,0 +1,25 @@
+# VCS
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node/Frontend
+protocol-wizard/node_modules/
+protocol-wizard/dist/
+node_modules/
+dist/
+
+# Misc
+*.log
+outputs/
+tmp/
+.DS_Store
+

@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    image: protocol-wizard-api:latest
+    container_name: protocol-wizard-api
+    environment:
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini:gemini-1.5-flash}
+      # Set one (or both) if you want live LLM calls
+      # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+

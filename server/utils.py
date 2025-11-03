@@ -64,10 +64,19 @@ def utc_now_iso() -> str:
     return datetime.datetime.utcnow().isoformat() + "Z"
 
 
+# Simple in-process cache for schema and validator
+_SCHEMA_CACHE: Dict[str, Any] | None = None
+_VALIDATOR_CACHE: Draft7Validator | None = None
+
+
 def load_protocol_schema() -> Tuple[Dict[str, Any], Draft7Validator]:
+    global _SCHEMA_CACHE, _VALIDATOR_CACHE
+    if _SCHEMA_CACHE is not None and _VALIDATOR_CACHE is not None:
+        return _SCHEMA_CACHE, _VALIDATOR_CACHE
     schema_path = Path("schemas/protocol.schema.json")
     schema = json.loads(load_text(schema_path))
     validator = Draft7Validator(schema)
+    _SCHEMA_CACHE, _VALIDATOR_CACHE = schema, validator
     return schema, validator
 
 
@@ -78,4 +87,3 @@ def validate_against_schema(obj: Dict[str, Any]) -> Dict[str, Any]:
         for e in validator.iter_errors(obj)
     ]
     return {"valid": len(errors) == 0, "errors": errors}
-
