@@ -324,7 +324,7 @@ echo "OPENAI_API_KEY=your_key" >> .env
 docker-compose up -d
 
 # Or local development
-pip install -r server/requirements.txt
+pip install -r requirements.txt
 uvicorn server.main:app --reload
 ```
 
@@ -563,3 +563,4 @@ Check the relevant documentation:
 ---
 
 **Ready to build something amazing!** 🎯
+

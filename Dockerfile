@@ -12,10 +12,10 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY server/requirements.txt ./server/requirements.txt
+COPY requirements.txt ./requirements.txt
 
 RUN python -m pip install --upgrade pip && \
-    python -m pip install -r server/requirements.txt
+    python -m pip install -r requirements.txt
 
 # Copy app code
 COPY server/ ./server/
@@ -25,4 +25,5 @@ COPY schemas/ ./schemas/
 EXPOSE 8000
 
 CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
 

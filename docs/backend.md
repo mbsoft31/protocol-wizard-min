@@ -52,7 +52,7 @@ AI-powered systematic review protocol generation with robust LLM integration, re
 ### 1. Install Dependencies
 
 ```bash
-python -m pip install -r server/requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ### 2. Install LLM Providers (Optional)
@@ -266,4 +266,5 @@ Improvements welcome! Focus areas:
 ## 📄 License
 
 [Your License Here]
+
 

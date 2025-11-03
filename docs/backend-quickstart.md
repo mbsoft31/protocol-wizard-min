@@ -34,7 +34,7 @@ curl http://localhost:8000/health
 
 ```bash
 # 1. Install dependencies
-pip install -r server/requirements.txt
+pip install -r requirements.txt
 pip install openai google-generativeai  # LLM providers (optional)
 
 # 2. Configure environment
@@ -353,4 +353,5 @@ ALLOWED_ORIGINS=https://your-domain.com
 - **Logs:** Check `docker-compose logs api` for errors
 
 Happy protocol generation! 🚀
+
 
